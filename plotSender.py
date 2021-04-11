@@ -1,7 +1,9 @@
 import subprocess
 import time
 import sys
+import re
 
+from typing import Optional
 from datetime import datetime
 
 
@@ -22,6 +24,12 @@ class Delivery:
     index = -1
     process = None
 
+def filter(datalist):
+    tuples = [val for val in datalist
+        if re.search(r'\.plot', val)]
+    #for t in tuples:
+        #prinln(f'{t}')
+    return tuples
 
 def run_list() -> str:
     return str(subprocess.check_output(['ls', '-l']))
@@ -30,7 +38,7 @@ def get_path_size(path: str) -> float:
     path_info = str(subprocess.check_output(['df',path]))
     unformated_usage = path_info.split('\\n')[1].split('%')[0]
     
-    usage = unformated_usage[-2:-1].replace(" ","")
+    usage = (unformated_usage[-2]+unformated_usage[-1]).replace(" ","")
     print(f'{path} has an usage of {usage}%')
 
     usagef = float(usage)
@@ -51,10 +59,21 @@ def get_total_plots() -> Optional[float]:
     return total_plots
 
 def get_plot(total_plots, path_index):
+    
+    tuples = total_plots.split('\\n')  
+    filtered = filter(tuples)
+    #for fe in filtered:
+        #print(f'{fe}\n')    
+    plot_name = ""
 
-    plot_name = 'plot-k32'+(total_plots.split('\\n')[2+path_index].split('plot-k32')[1])
-    if plot_name.find("plot.2.temp") != -1:
-        plot_name = ""
+    for t in filtered:
+        if t.find("plot.2.temp") == -1:
+            plot_name = 'plot-k32'+(t.split('plot-k32')[1])
+            f_ind = plot_name.find(".plot")
+            plot_name = plot_name[0:f_ind+5]
+            #print(plot_name)
+            break;
+
     return plot_name
 
 def get_available_paths():
@@ -135,7 +154,7 @@ def main():
                         delivery.plot = get_plot(total_plots, i)
                         if(delivery.plot != ""):
                             delivery.process = send_plot (delivery.plot, delivery.path)
-                            print(f'Sending new plot: {delivery.plot} to {delivery.path} {datetime.now()}')
+                            print(f'Sending new plot: {delivery.plot} to {delivery.path} at {datetime.now()}')
                             deliveries.append(delivery)
                         else:
                             print(f'There is no plots available, searchin again in a while... {datetime.now()}')
