@@ -57,7 +57,7 @@ def get_total_plots() -> Optional[float]:
         return None
 
     return total_plots
-
+    
 def get_plot(total_plots, path_index):
     
     tuples = total_plots.split('\\n')  
@@ -65,16 +65,21 @@ def get_plot(total_plots, path_index):
     #for fe in filtered:
         #print(f'{fe}\n')    
     plot_name = ""
+    i = 0
 
     for t in filtered:
-        if t.find("plot.2.temp") == -1:
-            plot_name = 'plot-k32'+(t.split('plot-k32')[1])
-            f_ind = plot_name.find(".plot")
-            plot_name = plot_name[0:f_ind+5]
+        if (t.find("plot.2.temp") == -1):
+            if (i==path_index):
+                plot_name = 'plot-k32'+(t.split('plot-k32')[1])
+                f_ind = plot_name.find(".plot")
+                plot_name = plot_name[0:f_ind+5]
+                break
+            i+=1
+
             #print(plot_name)
-            break;
 
     return plot_name
+
 
 def get_available_paths():
 
