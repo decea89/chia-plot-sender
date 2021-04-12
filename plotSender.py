@@ -117,9 +117,11 @@ def send_plot(plot_name,path_name):
     fullPath = SOURCE_PATH + plot_name
     try:
         process = subprocess.Popen("mv" + " " + fullPath + " " + dest_path, shell=True)
+        return process
     except Exception as e:
         message = f'Plot sender ha faileao enviando un plot.\n Plot: {pot_name}\n Path: {dest_path}\n Error: {e.message}\n{datetime.now()}'
         send_telegram_message(message,TELEGRAM_CHAT_ID)
+        return None
 
 def still_sending(p):
 
