@@ -6,7 +6,15 @@ import re
 from typing import Optional
 from datetime import datetime
 
+import requests
 
+#Telegram bot stuff. Replace API_KEY and CHAT_ID
+
+TELEGRAM_BOT_API_KEY = 'XXXXXXXXXX:aaaaaaaabbbbbbbcccccccddddddeeeeeee'
+TELEGRAM_CHAT_ID = 'YYYYYYYYY'
+TELEGRAM_SEND_MESSAGE_URL = "https://api.telegram.org/bot{}/sendMessage".format(
+    TELEGRAM_BOT_API_KEY
+)
 # PUT HERE YOUR PATHS (DEST_PATHS)
 # THIS SCRIPT WILL SEND PLOTS TO MOUNTED DEVICES WITH AN USAGE LESS THAN 97% TO AVOID OUT_OF_SPACE DURING THE COPY
 
@@ -16,6 +24,9 @@ DEST_PATHS = ['/home/dechin/sharedPlots/hdd','/home/dechin/sharedPlots/hdd1','/h
 
 SOURCE_PATH = '/mnt/hddunico/'
 
+
+
+
 MINUTES_TO_SLEEP = 2
 
 class Delivery:
@@ -23,6 +34,12 @@ class Delivery:
     plot = ""
     index = -1
     process = None
+
+def send_telegram_message(text, chat_id):
+    try:
+        requests.post(TELEGRAM_SEND_MESSAGE_URL, json={'chat_id': chat_id, 'text': text})
+    except Exception as e:
+        print(f'Algo fue mal enviando request a telegram\nMensaje que se quería enviar: {text}\nError: {e.message}')
 
 def filter(datalist):
     tuples = [val for val in datalist
@@ -57,7 +74,7 @@ def get_total_plots() -> Optional[float]:
         return None
 
     return total_plots
-    
+
 def get_plot(total_plots, path_index):
     
     tuples = total_plots.split('\\n')  
@@ -80,7 +97,6 @@ def get_plot(total_plots, path_index):
 
     return plot_name
 
-
 def get_available_paths():
 
     paths = []
@@ -99,12 +115,15 @@ def get_available_paths():
 def send_plot(plot_name,path_name):
     dest_path = path_name
     fullPath = SOURCE_PATH + plot_name
-    return subprocess.Popen("mv" + " " + fullPath + " " + dest_path, shell=True)
-    
+    try:
+        process = subprocess.Popen("mv" + " " + fullPath + " " + dest_path, shell=True)
+    except Exception as e:
+        message = f'Plot sender ha faileao enviando un plot.\n Plot: {pot_name}\n Path: {dest_path}\n Error: {e.message}\n{datetime.now()}'
+        send_telegram_message(message,TELEGRAM_CHAT_ID)
 
 def still_sending(p):
 
-    poll = p.poll()
+    poll = p.poll() 
 
     return poll is None # true = ongoing , false = process ended
 
@@ -138,7 +157,9 @@ def main():
                 #paths = DEST_PATHS                
                 if len(paths) < 1:
                     print(f'There is no space available at dest paths, add more paths... {datetime.now()}')
-                    time.sleep(5 * 60)
+                    message = f'No te quedan teras disponibles en el farmer! compra mas cerdo\n{datetime.now()}'
+                    send_telegram_message(message,TELEGRAM_CHAT_ID)
+                    time.sleep(60 * 60)
                     continue
 
 
@@ -146,7 +167,7 @@ def main():
                 total_plots = get_total_plots()
                 plots_available = parse_total_plots(total_plots)
                 if plots_available < 1:
-                    print(f'There is no plots available, searchin again in a while... {datetime.now()}')
+                    #print(f'There is no plots available, searchin again in a while... {datetime.now()}')
                     time.sleep(5 * 60)
                     continue
 
