@@ -39,7 +39,7 @@ def send_telegram_message(text, chat_id):
     try:
         requests.post(TELEGRAM_SEND_MESSAGE_URL, json={'chat_id': chat_id, 'text': text})
     except Exception as e:
-        print(f'Algo fue mal enviando request a telegram\nMensaje que se quería enviar: {text}\nError: {e.message}')
+        print(f'Something was wrong\nMessagge that was supposed to be sent: {text}\nError: {e.message}')
 
 def filter(datalist):
     tuples = [val for val in datalist
@@ -159,7 +159,7 @@ def main():
                 #paths = DEST_PATHS                
                 if len(paths) < 1:
                     print(f'There is no space available at dest paths, add more paths... {datetime.now()}')
-                    message = f'No te quedan teras disponibles en el farmer! compra mas cerdo\n{datetime.now()}'
+                    message = f'out of storage\n{datetime.now()}'
                     send_telegram_message(message,TELEGRAM_CHAT_ID)
                     time.sleep(60 * 60)
                     continue
